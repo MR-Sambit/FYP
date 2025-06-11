@@ -1,45 +1,698 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Crop Disease Detector</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --success-color: #2ecc71;
+            --warning-color: #f1c40f;
+            --danger-color: #e74c3c;
+            --dark-bg: #1a1a1a;
+            --light-bg: #f5f7fa;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.3s ease;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--light-bg) 0%, #c3cfe2 100%);
+            padding: 0;
+            margin: 0;
+        }
+
+        .dark-mode {
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #2d3436 100%);
+            color: #f1f1f1;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .dark-mode .container {
+            background: rgba(33, 33, 33, 0.95);
+        }
+
+        h2 {
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #2c3e50;
+            position: relative;
+            display: inline-block;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 3px;
+            background: var(--primary-color);
+            border-radius: 2px;
+        }
+
+        .dark-mode h2 {
+            color: #ecf0f1;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--primary-color);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(52, 152, 219, 0.05);
+            position: relative;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0 10px;
+            overflow: hidden;
+        }
+
+        .upload-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent, rgba(52, 152, 219, 0.1), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .upload-area:hover::before {
+            transform: translateX(100%);
+        }
+
+        .upload-area.has-image {
+            padding: 10px;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 250px;
+            border-radius: 10px;
+            margin: 10px 0;
+            display: none;
+            object-fit: contain;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .image-preview.show {
+            display: block;
+        }
+
+        .upload-text {
+            transition: all 0.3s ease;
+        }
+
+        .upload-area.has-image .upload-text {
+            display: none;
+        }
+
+        .remove-image {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(231, 76, 60, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 2;
+            box-shadow: 0 2px 5px rgba(231, 76, 60, 0.3);
+        }
+
+        .remove-image:hover {
+            background: #c0392b;
+            transform: scale(1.1);
+        }
+
+        .remove-image.show {
+            display: flex;
+        }
+
+        .btn-primary, .btn-success {
+            width: 100%;
+            max-width: 300px;
+            margin: 10px auto;
+            padding: 12px 20px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+        }
+
+        .btn-success {
+            background: var(--success-color);
+        }
+
+        .btn-primary::after, .btn-success::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+        }
+
+        .btn-primary:active::after, .btn-success:active::after {
+            width: 200px;
+            height: 200px;
+        }
+
+        .btn-toggle {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 8px 15px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5px);
+        }
+
+        .dark-mode .btn-toggle {
+            background: rgba(33, 33, 33, 0.9);
+            border-color: #ecf0f1;
+            color: #ecf0f1;
+        }
+
+        .btn-toggle:hover {
+            background: #3498db;
+            color: white;
+        }
+
+        #result, .remedy-section {
+            margin: 10px 5px;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .remedy-section {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 15px;
+            background: rgba(46, 204, 113, 0.1);
+            font-style: italic;
+        }
+
+        .dark-mode .remedy-section {
+            background: rgba(46, 204, 113, 0.15);
+        }
+
+        #downloadBtn {
+            background: #2ecc71;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        #downloadBtn:hover {
+            background: #27ae60;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .custom-file-label {
+            display: inline-block;
+            padding: 8px 15px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(52, 152, 219, 0.2);
+        }
+
+        .custom-file-label:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+        }
+
+        .loading {
+            display: none;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .countdown {
+            display: none;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .countdown-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            animation: pulse 1s infinite;
+            text-shadow: 0 2px 10px rgba(52, 152, 219, 0.2);
+        }
+
+        .dark-mode .countdown-number {
+            color: #3498db;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .loading-spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(52, 152, 219, 0.1);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            margin: 0;
+            padding: 10px 15px;
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .alert-success {
+            background: rgba(46, 204, 113, 0.1);
+            color: #27ae60;
+        }
+
+        .alert-info {
+            background: rgba(52, 152, 219, 0.1);
+            color: #2980b9;
+        }
+
+        .dark-mode .alert-success {
+            background: rgba(46, 204, 113, 0.15);
+            color: #2ecc71;
+        }
+
+        .dark-mode .alert-info {
+            background: rgba(52, 152, 219, 0.15);
+            color: #3498db;
+        }
+
+        .alert h4 {
+            margin: 0 0 5px 0;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .alert p {
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 576px) {
+            body {
+                background: none;
+            }
+
+            .container {
+                margin: 0;
+                padding: 15px;
+                border-radius: 0;
+                min-height: 100vh;
+                box-shadow: none;
+            }
+
+            .dark-mode .container {
+                background: var(--dark-bg);
+            }
+
+            h2 {
+                font-size: 1.3rem;
+                margin: 10px 0 20px;
+            }
+
+            .upload-area {
+                min-height: 120px;
+                padding: 15px;
+            }
+
+            .image-preview {
+                max-height: 200px;
+            }
+
+            .btn-toggle {
+                top: 5px;
+                right: 5px;
+                padding: 6px 12px;
+                font-size: 0.9rem;
+            }
+
+            .custom-file-label {
+                padding: 8px 15px;
+                font-size: 0.9rem;
+            }
+
+            #result, .remedy-section {
+                margin: 8px 3px;
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+
+            .alert {
+                padding: 8px 12px;
+            }
+
+            .alert h4 {
+                font-size: 1rem;
+                margin-bottom: 3px;
+            }
+
+            .countdown-number {
+                font-size: 2rem;
+            }
+
+            .loading-spinner {
+                width: 25px;
+                height: 25px;
+            }
+        }
+
+        @media (hover: none) {
+            .btn-primary, .btn-success, .btn-toggle, .custom-file-label {
+                -webkit-tap-highlight-color: transparent;
+            }
+
+            .upload-area:active {
+                background: rgba(52, 152, 219, 0.1);
+            }
+
+            .btn-primary:active, .btn-success:active {
+                transform: scale(0.98);
+            }
+        }
+
+        @supports (-webkit-touch-callout: none) {
+            input, select, textarea {
+                font-size: 16px;
+            }
+        }
+    </style>
 </head>
 
-<body>
-    <h2 class="text-center mt-4">Upload a Crop Leaf Image</h2>
-    <div class="container mt-5">
-        <form id="upload-form" enctype="multipart/form-data">
-            <div class="form-group">
-                <input type="file" name="file" class="form-control-file" required>
+<body class="bg-light text-dark">
+    <div class="container text-center">
+        <button class="btn btn-toggle" onclick="toggleMode()">
+            <i class="fas fa-moon"></i> <span class="d-none d-sm-inline">Toggle Theme</span>
+        </button>
+
+        <h2><i class="fas fa-leaf"></i> Crop Disease Detector</h2>
+
+        <form id="upload-form" class="mt-4" enctype="multipart/form-data">
+            <div class="upload-area" onclick="document.querySelector('input[type=file]').click()">
+                <button type="button" class="remove-image" onclick="removeImage(event)">
+                    <i class="fas fa-times"></i>
+                </button>
+                <img id="imagePreview" class="image-preview" alt="Preview">
+                <div class="upload-text">
+                    <i class="fas fa-cloud-upload-alt fa-3x mb-3"></i>
+                    <h4>Drag & Drop or Click to Upload</h4>
+                    <p class="text-muted">Supported formats: JPG, PNG</p>
+                </div>
+                <div class="file-input-wrapper">
+                    <input type="file" name="file" class="form-control-file" accept="image/*" required>
+                    <span class="custom-file-label">Choose File</span>
+                </div>
             </div>
-            <button type="submit" class="btn btn-primary">Predict</button>
+            <button type="submit" class="btn btn-primary mt-4" id="analyzeBtn" disabled>
+                <i class="fas fa-search"></i> Analyze Image
+            </button>
         </form>
+
+        <div class="loading">
+            <div class="loading-spinner mx-auto"></div>
+            <p class="mt-2">Analyzing image...</p>
+        </div>
+
+        <div class="countdown">
+            <div class="countdown-number">3</div>
+            <p class="mt-2">Starting analysis...</p>
+        </div>
+
+        <div id="result" class="text-primary mt-4"></div>
+
+        <div class="remedy-section" id="remedy"></div>
+
+        <button id="downloadBtn" class="btn btn-success mt-3 d-none">
+            <i class="fas fa-download"></i> Download History
+        </button>
     </div>
 
-    <div id="result" class="text-center text-primary p-3"></div>
-
+    <!-- Scripts -->
     <script>
+        let historyData = [];
         const form = document.getElementById('upload-form');
+        const loading = document.querySelector('.loading');
+        const fileInput = document.querySelector('input[type=file]');
+        const customFileLabel = document.querySelector('.custom-file-label');
+        const imagePreview = document.getElementById('imagePreview');
+        const uploadArea = document.querySelector('.upload-area');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const removeImageBtn = document.querySelector('.remove-image');
+
+        function removeImage(event) {
+            event.stopPropagation();
+            fileInput.value = '';
+            imagePreview.src = '';
+            imagePreview.classList.remove('show');
+            uploadArea.classList.remove('has-image');
+            removeImageBtn.classList.remove('show');
+            customFileLabel.textContent = 'Choose File';
+            analyzeBtn.disabled = true;
+        }
+
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                customFileLabel.textContent = file.name;
+                
+                // Preview image
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.classList.add('show');
+                    uploadArea.classList.add('has-image');
+                    removeImageBtn.classList.add('show');
+                    analyzeBtn.disabled = false;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
         form.onsubmit = async (e) => {
             e.preventDefault();
+            
+            // Show countdown
+            const countdown = document.querySelector('.countdown');
+            const countdownNumber = document.querySelector('.countdown-number');
+            countdown.style.display = 'block';
+            
+            // Start countdown
+            for (let i = 3; i > 0; i--) {
+                countdownNumber.textContent = i;
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+            // Hide countdown and show loading
+            countdown.style.display = 'none';
+            loading.style.display = 'block';
+            document.getElementById('result').innerHTML = '';
+            document.getElementById('remedy').innerHTML = '';
 
             const formData = new FormData(form);
-            const response = await fetch('/predict', {
-                method: 'POST',
-                body: formData
-            });
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
 
-            const result = await response.json();
-            document.getElementById('result').innerHTML =
-                `Predicted Class: ${result.class_name} (ID: ${result.class_id})<br>
-     Confidence: ${result.confidence}%`;
+                const result = await response.json();
 
+                const output = `
+                    <div class="alert alert-success">
+                        <h4><i class="fas fa-check-circle"></i> Analysis Complete</h4>
+                        <p><strong>Predicted Class:</strong> ${result.class_name} (ID: ${result.class_id})<br>
+                        <strong>Confidence:</strong> ${result.confidence}%</p>
+                    </div>
+                `;
+                const remedyText = `
+                    <div class="alert alert-info">
+                        <h4><i class="fas fa-lightbulb"></i> Recommended Remedy</h4>
+                        <p>${result.remedy}</p>
+                    </div>
+                `;
+
+                document.getElementById('result').innerHTML = output;
+                document.getElementById('remedy').innerHTML = remedyText;
+
+                historyData.push({
+                    Class: result.class_name,
+                    ID: result.class_id,
+                    Confidence: result.confidence,
+                    Remedy: result.remedy
+                });
+
+                document.getElementById('downloadBtn').classList.remove('d-none');
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle"></i> Error: ${error.message}
+                    </div>
+                `;
+            } finally {
+                loading.style.display = 'none';
+            }
         };
-    </script>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</body>
 
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const csvContent = "data:text/csv;charset=utf-8," +
+                ["Class,ID,Confidence,Remedy", ...historyData.map(r =>
+                    `${r.Class},${r.ID},${r.Confidence},${r.Remedy.replace(/,/g, ';')}`
+                )].join("\n");
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "prediction_history.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        function toggleMode() {
+            document.body.classList.toggle('dark-mode');
+            const icon = document.querySelector('.btn-toggle i');
+            icon.classList.toggle('fa-moon');
+            icon.classList.toggle('fa-sun');
+        }
+
+        // Drag and drop functionality
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            uploadArea.classList.add('bg-light');
+        }
+
+        function unhighlight(e) {
+            uploadArea.classList.remove('bg-light');
+        }
+
+        uploadArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+            
+            if (files && files[0]) {
+                const file = files[0];
+                customFileLabel.textContent = file.name;
+                
+                // Preview image
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.classList.add('show');
+                    uploadArea.classList.add('has-image');
+                    removeImageBtn.classList.add('show');
+                    analyzeBtn.disabled = false;
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+    </script>
+</body>
 </html>
