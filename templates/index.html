@@ -465,6 +465,82 @@
                 font-size: 16px;
             }
         }
+
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+            width: 100%;
+            max-width: 300px;
+            margin: 10px auto;
+            padding: 12px 20px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-info:hover {
+            background: #138496;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(23, 162, 184, 0.3);
+        }
+
+        .camera-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .camera-container video {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            display: block;
+            border-radius: 10px;
+        }
+
+        .camera-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .camera-btn {
+            padding: 15px 30px;
+            border-radius: 25px;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .capture-btn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .close-camera-btn {
+            background: #6c757d;
+            color: white;
+        }
+
+        .camera-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
     </style>
 </head>
 
@@ -492,6 +568,9 @@
                     <span class="custom-file-label">Choose File</span>
                 </div>
             </div>
+            <button type="button" class="btn btn-info mt-3" id="cameraBtn" onclick="openCamera()">
+                <i class="fas fa-camera"></i> Open Camera
+            </button>
             <button type="submit" class="btn btn-primary mt-4" id="analyzeBtn" disabled>
                 <i class="fas fa-search"></i> Analyze Image
             </button>
@@ -514,6 +593,18 @@
         <button id="downloadBtn" class="btn btn-success mt-3 d-none">
             <i class="fas fa-download"></i> Download History
         </button>
+    </div>
+
+    <div class="camera-container" id="cameraContainer">
+        <video id="camera" autoplay playsinline></video>
+        <div class="camera-controls">
+            <button class="camera-btn capture-btn" onclick="captureImage()">
+                <i class="fas fa-camera"></i> Capture
+            </button>
+            <button class="camera-btn close-camera-btn" onclick="closeCamera()">
+                <i class="fas fa-times"></i> Close
+            </button>
+        </div>
     </div>
 
     <!-- Scripts -->
@@ -692,6 +783,71 @@
                 }
                 reader.readAsDataURL(file);
             }
+        }
+
+        function openCamera() {
+            const cameraContainer = document.getElementById('cameraContainer');
+            const video = document.getElementById('camera');
+            
+            cameraContainer.style.display = 'block';
+            
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                    .then(function(stream) {
+                        video.srcObject = stream;
+                    })
+                    .catch(function(error) {
+                        console.error("Camera error:", error);
+                        alert("Could not access the camera. Please make sure you have granted camera permissions.");
+                        closeCamera();
+                    });
+            } else {
+                alert("Your browser doesn't support camera access. Please use a modern browser.");
+                closeCamera();
+            }
+        }
+
+        function closeCamera() {
+            const cameraContainer = document.getElementById('cameraContainer');
+            const video = document.getElementById('camera');
+            
+            if (video.srcObject) {
+                const tracks = video.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+            }
+            
+            cameraContainer.style.display = 'none';
+        }
+
+        function captureImage() {
+            const video = document.getElementById('camera');
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            
+            // Convert canvas to blob
+            canvas.toBlob(function(blob) {
+                const file = new File([blob], "camera-capture.jpg", { type: "image/jpeg" });
+                
+                // Create a new FileList-like object
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                
+                // Update the file input
+                fileInput.files = dataTransfer.files;
+                
+                // Update UI
+                customFileLabel.textContent = "camera-capture.jpg";
+                imagePreview.src = URL.createObjectURL(blob);
+                imagePreview.classList.add('show');
+                uploadArea.classList.add('has-image');
+                removeImageBtn.classList.add('show');
+                analyzeBtn.disabled = false;
+                
+                // Close camera
+                closeCamera();
+            }, 'image/jpeg');
         }
     </script>
 </body>
